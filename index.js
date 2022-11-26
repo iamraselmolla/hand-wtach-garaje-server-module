@@ -15,6 +15,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         const usersCollection = client.db("buywatch").collection("users");
+        const watchesCollection = client.db("buywatch").collection("watches");
         // Saving user registration data
         app.post('/users', async(req,res) => {
             const user = req.body;
@@ -38,6 +39,12 @@ async function run() {
             }
             const selectedAccount = await usersCollection.find(query).toArray()
             res.send(selectedAccount)
+        });
+        // Saving Watch adding from data to database
+        app.post('/watches', async (req, res) => {
+            const  allData = req.body;
+            const result  =  await watchesCollection.insertOne(allData);
+            res.send(result)
         })
 
     }
