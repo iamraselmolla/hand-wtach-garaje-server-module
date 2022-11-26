@@ -26,6 +26,19 @@ async function run() {
             const result = await usersCollection.insertOne(user)
             res.send(result)
         })
+        // Find all buyer/seller accounts
+        app.get('/accounts', async(req, res) => {
+            const accountType = req.query.account
+            let query;
+            if(req.query.account === 'all'){
+                query = {}
+            }else{
+
+                query = {accountType: accountType}
+            }
+            const selectedAccount = await usersCollection.find(query).toArray()
+            res.send(selectedAccount)
+        })
 
     }
     finally {
