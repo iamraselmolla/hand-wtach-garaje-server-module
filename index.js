@@ -72,11 +72,22 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         })
+        // Delete User
         app.delete('/accounts/verify/:id', async (req, res) => {
             const id = req.params.id;
             const filter = {_id : ObjectId(id)};
             const result = await usersCollection.deleteOne(filter);
             res.send(result);
+        })
+        // Find user basis added item
+        app.get('/added-items', async(req, res) => {
+            const email = req.query.email;
+            let query;
+            if(email){
+                query  = {userEmail: email}   
+            }
+            const result = await watchesCollection.find(query).toArray();
+            res.send(result)
         })
 
     }
