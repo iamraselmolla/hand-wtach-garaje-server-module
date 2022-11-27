@@ -72,6 +72,19 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         })
+        // Mark item as sold
+        app.put('/items/sold-out/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {_id : ObjectId(id)};
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    sold: true
+                }
+            }
+            const result = await watchesCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
         // Delete User
         app.delete('/accounts/verify/:id', async (req, res) => {
             const id = req.params.id;
