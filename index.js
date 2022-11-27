@@ -16,6 +16,7 @@ async function run() {
     try {
         const usersCollection = client.db("buywatch").collection("users");
         const watchesCollection = client.db("buywatch").collection("watches");
+        const categoriesCollection = client.db("buywatch").collection("categories");
         // Saving user registration data
         app.post('/users', async(req,res) => {
             const user = req.body;
@@ -55,9 +56,30 @@ async function run() {
         });
         // Find all item
         app.get('/all-items', async(req, res) => {
+            let dataLimit;
+            if(dataLimit){
+                dataLimit = parseInt(req.query.limit)
+            }else{
+                dataLimit = 0;
+            }
+            
             const query = {sold:false};
-            const result = await watchesCollection.find(query).limit(3).toArray();
+            const result = await watchesCollection.find(query).limit(dataLimit).toArray();
             res.send(result)
+        })
+        // Find all reported items
+        app.get('/reported/all-items', async(req, res) => {
+          
+            const query = {reported:true};
+            const result = await watchesCollection.find(query).toArray();
+            res.send(result)
+        })
+        // Find Categories
+        app.get('/categories', async (req, res) => {
+            const query = {};
+            const result = await categoriesCollection.find(query).toArray()
+            res.send(result)
+
         })
         // verify user
         app.put('/accounts/verify/:id', async (req, res) => {
@@ -85,6 +107,45 @@ async function run() {
             const result = await watchesCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         })
+        // Advertise item
+        app.put('/items/advertised/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {_id : ObjectId(id)};
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    advertise: true
+                }
+            }
+            const result = await watchesCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+        // Reported items
+        app.put('/items/reported/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {_id : ObjectId(id)};
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    reported: true
+                }
+            }
+            const result = await watchesCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+        // Reported items solvation
+        app.put('/items/reported-solved/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {_id : ObjectId(id)};
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    reported: false
+                }
+            }
+            const result = await watchesCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
         // Delete User
         app.delete('/accounts/verify/:id', async (req, res) => {
             const id = req.params.id;
@@ -94,14 +155,16 @@ async function run() {
         })
         // Find user basis added item
         app.get('/added-items', async(req, res) => {
-            const email = req.query.email;
             let query;
-            if(email){
-                query  = {userEmail: email}   
+            if(req.query.email === 'admin'){
+                query  = {}   
+            }else{
+                query  = {userEmail: req.query.email} 
             }
             const result = await watchesCollection.find(query).toArray();
             res.send(result)
         })
+
 
     }
     finally {
