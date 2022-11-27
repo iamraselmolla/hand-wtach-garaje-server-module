@@ -46,12 +46,18 @@ async function run() {
             const result  =  await watchesCollection.insertOne(allData);
             res.send(result)
         })
-        // FInd account type quering by emai
+        // FInd account type quering by email
         app.get('/users', async(req, res) => {
             const email = req.query.email;
             const query={email: email};
             const findUser = await usersCollection.findOne(query);
             res.send(findUser)
+        });
+        // Find all item
+        app.get('/all-items', async(req, res) => {
+            const query = {sold:false};
+            const result = await watchesCollection.find(query).limit(3).toArray();
+            res.send(result)
         })
 
     }
