@@ -59,6 +59,19 @@ async function run() {
             const result = await watchesCollection.find(query).limit(3).toArray();
             res.send(result)
         })
+        // verify user
+        app.put('/accounts/verify/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {_id : ObjectId(id)};
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    verified: true
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
 
     }
     finally {
