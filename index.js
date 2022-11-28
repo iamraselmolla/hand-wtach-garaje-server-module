@@ -155,6 +155,7 @@ async function run() {
         })
         // Find user basis added item
         app.get('/added-items', async(req, res) => {
+            
             let query;
             if(req.query.email === 'admin'){
                 query  = {}   
@@ -162,6 +163,31 @@ async function run() {
                 query  = {userEmail: req.query.email} 
             }
             const result = await watchesCollection.find(query).toArray();
+            res.send(result)
+        })
+        // Find product by product category id
+        app.get('/categories/:id', async (req, res) => {
+            const query = {category_id : req.params.id}
+            const result = await watchesCollection.find(query).toArray();
+            res.send(result)
+        })
+        // Delete Item
+        app.delete('/delete-items/:id', async (req, res) => {
+            const id = req.params.id
+            const query = {_id : ObjectId(id)};
+            const result = await watchesCollection.deleteOne(query);
+            res.send(result)
+        })
+        // Find advertise products
+        app.get('/advertised-items', async(req, res) => {
+            const query ={advertise: true};
+            let dataLimit;
+            if(req.query.limit){
+                dataLimit = parseInt(req.query.limit)
+            }else{
+                dataLimit = 0;
+            }
+            const result = await watchesCollection.find(query).limit(dataLimit).toArray();
             res.send(result)
         })
 
