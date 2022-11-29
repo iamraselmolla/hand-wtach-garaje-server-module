@@ -126,6 +126,19 @@ async function run() {
             const result = await watchesCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         })
+        // Mark item as availabe
+        app.put('/items/available/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {_id : ObjectId(id)};
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    sold: false
+                }
+            }
+            const result = await watchesCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
         // Advertise item
         app.put('/items/advertised/:id', async (req, res) => {
             const id = req.params.id;
@@ -203,7 +216,7 @@ async function run() {
         })
         // Find advertise products
         app.get('/advertised-items', async(req, res) => {
-            const query ={advertise: true};
+            const query ={advertise: true, sold:false};
             let dataLimit;
             if(req.query.limit){
                 dataLimit = parseInt(req.query.limit)
@@ -254,9 +267,10 @@ async function run() {
         // Find my shopping
         app.get('/my-shopping', async(req, res)=> {
             const email = req.query.email;
-            const query = {email: email, paid:true};
-            const result = await bookedCollection.find(query).toArray()
-            res.send(result)
+            const query = {email: email};
+            const result = await bookedCollection.find(query).toArray();
+            const filterResult = result.filter(sr => sr.paid !== false)
+            res.send(filterResult)
         })
 
         // payment verification
@@ -264,6 +278,21 @@ async function run() {
             const query = {payment_id: req.query.paymentID}
             const result = await bookedCollection.findOne(query);
             res.send(result)
+        })
+        // check account verified
+        app.get('/check-verify', async (req, res) => {
+            const email = req.query.email;
+            if(email){
+                const query = {email : email};
+                const result = await usersCollection.findOne(query);
+                if(result?.verified){
+                    return res.send(true)
+                }else{
+                    return res.send(false)
+                }
+
+            }
+           
         })
 
     }
