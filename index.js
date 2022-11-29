@@ -1,6 +1,6 @@
 const express = require('express')
 const jwt = require('jsonwebtoken')
-const stripe = require("stripe")(process.env.stripeKey);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 require('dotenv').config();
 const app = express()
@@ -13,7 +13,22 @@ const port = process.env.PORT || 5000;
 // Database connection
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.q37bxqk.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-console.log(process.env.stripeKey)
+
+function verifyJWT(req, res, next){
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'unauthorized access' });
+    }
+    const token = authHeader.split(' ')[1];
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden access' });
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
 async function run() {
     try {
         const usersCollection = client.db("buywatch").collection("users");
@@ -22,19 +37,27 @@ async function run() {
         const bookedCollection = client.db("buywatch").collection("booked");
         // Payment method
         app.post('/create-payment-intent', async (req, res) => {
-            const booking = req.body;
-            const amount = booking.price * 100;
+            const booking = req?.body;
+            const price = booking?.price;
+            const amount = price * 100;
+            console.log(amount)
+
             const paymentIntent = await stripe.paymentIntents.create({
-                currency: "usd",
+                currency: 'usd',
                 amount: amount,
-                "payment_method_types" : [
+                "payment_method_types": [
                     "card"
                 ]
-              });
-            
-              res.send({
+            });
+            res.send({
                 clientSecret: paymentIntent.client_secret,
-              });
+            });
+        });
+        app.post('/jwt', (req, res)=> {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10d' });
+            res.send({token})
+
         })
         // Saving user registration data
         app.post('/users', async(req,res) => {
@@ -48,7 +71,7 @@ async function run() {
             res.send(result)
         })
         // Find all buyer/seller accounts
-        app.get('/accounts', async(req, res) => {
+        app.get('/accounts', verifyJWT, async(req, res) => {
             const accountType = req.query.account
             let query;
             if(req.query.account === 'all'){
@@ -73,6 +96,12 @@ async function run() {
             const findUser = await usersCollection.findOne(query);
             res.send(findUser)
         });
+        // Get All user
+        app.get('/all-users', async (req, res) => {
+            const query = {};
+            const result = await usersCollection.find(query).toArray();
+            res.send(result)
+        })
         // Find all item
         app.get('/all-items', async(req, res) => {
             let dataLimit;
@@ -293,6 +322,12 @@ async function run() {
 
             }
            
+        })
+        app.get('/all-uploaded-items', async(req, res) => {
+          
+            const query = {};
+            const result = await watchesCollection.find(query).toArray();
+            res.send(result)
         })
 
     }
