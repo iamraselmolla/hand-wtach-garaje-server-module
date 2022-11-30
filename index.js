@@ -1,8 +1,8 @@
+require('dotenv').config();
 const express = require('express')
 const jwt = require('jsonwebtoken')
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-require('dotenv').config();
 const app = express()
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -169,7 +169,7 @@ async function run() {
             res.send(result);
         })
         // Advertise item
-        app.put('/items/advertised/:id', async (req, res) => {
+        app.put('/items/advertised/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = {_id : ObjectId(id)};
             const options = { upsert: true };
@@ -298,7 +298,7 @@ async function run() {
             const email = req.query.email;
             const query = {email: email};
             const result = await bookedCollection.find(query).toArray();
-            const filterResult = result.filter(sr => sr.paid !== false)
+            const filterResult = result.filter(sr => sr.paid === true)
             res.send(filterResult)
         })
 
@@ -346,7 +346,7 @@ run().catch(e => console.log(e.message))
 
 app.get('/', (req, res) => {
     console.log(process.env.imageBBAPI)
-    res.send('Hello World!')
+    res.send('Assignment 12 Server running!')
 })
 
 app.listen(port, () => {
