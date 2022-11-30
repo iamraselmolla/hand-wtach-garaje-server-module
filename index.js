@@ -8,7 +8,7 @@ const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(cors())
 app.use(express.json())
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5000; 
 
 // Database connection
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.q37bxqk.mongodb.net/?retryWrites=true&w=majority`;
@@ -37,8 +37,8 @@ async function run() {
         const bookedCollection = client.db("buywatch").collection("booked");
         // Payment method
         app.post('/create-payment-intent', async (req, res) => {
-            const booking = req?.body;
-            const price = booking?.price;
+            const booking = req.body;
+            const price = booking.price;
             const amount = price * 100;
             console.log(amount)
 
@@ -71,7 +71,7 @@ async function run() {
             res.send(result)
         })
         // Find all buyer/seller accounts
-        app.get('/accounts', verifyJWT, async(req, res) => {
+        app.get('/accounts', async(req, res) => {
             const accountType = req.query.account
             let query;
             if(req.query.account === 'all'){
