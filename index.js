@@ -71,7 +71,7 @@ async function run() {
             res.send(result)
         })
         // Find all buyer/seller accounts
-        app.get('/accounts', async(req, res) => {
+        app.get('/accounts', verifyJWT, async(req, res) => {
             const accountType = req.query.account
             let query;
             if(req.query.account === 'all'){
@@ -120,6 +120,13 @@ async function run() {
           
             const query = {reported:true};
             const result = await watchesCollection.find(query).toArray();
+            res.send(result)
+        })
+        app.get('/details/:id', async (req, res) => {
+            const id = req.params.id;
+
+            const query = { _id: ObjectId(id)};
+            const result = await watchesCollection.findOne(query)
             res.send(result)
         })
         // Find Categories
@@ -323,12 +330,12 @@ async function run() {
             }
            
         })
+        // Find all time uploaded items
         app.get('/all-uploaded-items', async(req, res) => {
-          
             const query = {};
             const result = await watchesCollection.find(query).toArray();
             res.send(result)
-        })
+        });
 
     }
     finally {
