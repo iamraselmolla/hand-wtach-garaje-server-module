@@ -311,7 +311,7 @@ async function run() {
 
         // payment verification
         app.get('/payment-verification', async (req, res) => {
-            const query = {payment_id: req.query.paymentID}
+            const query = {payment_id: req?.query.paymentID}
             const result = await bookedCollection.findOne(query);
             res.send(result)
         })
