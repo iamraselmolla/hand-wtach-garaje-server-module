@@ -190,19 +190,7 @@ async function run() {
             const result = await watchesCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         })
-        // set it auction
-        app.put('/items/auction/:id', async (req, res) => {
-            const id = req.params.id;
-            const filter = { _id: ObjectId(id) };
-            const options = { upsert: true };
-            const updatedDoc = {
-                $set: {
-                    auction: true
-                }
-            }
-            const result = await watchesCollection.updateOne(filter, updatedDoc, options);
-            res.send(result);
-        })
+
         // Reported items
         app.put('/items/reported/:id', async (req, res) => {
             const id = req.params.id;
@@ -290,15 +278,23 @@ async function run() {
         })
         // Booked item
         app.post('/booked', async (req, res) => {
-            const data = req.body;
-            const result = await bookedCollection.insertOne(data);
+            const { bookedData, product_id } = req.body;
+            const query = { _id: ObjectId(product_id) }
+            const updatedDoc = {
+                $push: { bookedDataArray: bookedData }
+            };
+            const options = { upsert: true };
+            const result = await watchesCollection.updateOne(query, updatedDoc, options)
+            console.log(result)
             res.send(result)
         })
+
         // find booked item
         app.get('/booked', async (req, res) => {
             const email = req.query.email;
-            const query = { email: email, paid: false }
-            const result = await bookedCollection.find(query).toArray();
+
+            const FindAllResult = await watchesCollection.find({ 'bookedDataArray.email': email }).toArray();
+            const result = FindAllResult.filter(singleItem => singleItem.sold === false)
             res.send(result)
         })
         // Find single items
@@ -364,21 +360,49 @@ async function run() {
         });
 
 
-        // Hanldle Start Auction
-        app.put('/startAuction', async (req, res) => {
-            const { id } = req.body;
-            console.log(req.body);
+        // set it auction
+        app.put('/items/auction/:id', async (req, res) => {
+            const id = req.params.id;
             const filter = { _id: ObjectId(id) };
-            const findPro = await watchesCollection.findOne(filter);
-            console.log(findPro);
-            
+            const options = { upsert: true };
             const updatedDoc = {
                 $set: {
-                    startAuction: true // Assuming you want to set the "startAuction" field to true
+                    auction: true,
+                    startAuction: false,
+                    endAuction: false
+                }
+            }
+            const result = await watchesCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+        // Hanldle Start Auction
+        app.put('/startAuction', async (req, res) => {
+            const { productId } = req.body;
+            const filter = { _id: ObjectId(productId) };
+            const updatedDoc = {
+                $set: {
+
+                    startAuction: true,
+
                 }
             };
-            
-            const result = await watchesCollection.updateOne(filter, updatedDoc);
+
+            const result = await watchesCollection.updateOne(filter, updatedDoc, { upsert: true });
+            res.send(result);
+        });
+        // Hanldle stop Auction
+        app.put('/stopAuction', async (req, res) => {
+            const { productId } = req.body;
+            const filter = { _id: ObjectId(productId) };
+            const updatedDoc = {
+                $set: {
+
+                    endAuction: true
+
+                }
+            };
+
+            const result = await watchesCollection.updateOne(filter, updatedDoc, { upsert: true });
             res.send(result);
         });
 
