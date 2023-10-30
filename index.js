@@ -363,6 +363,25 @@ async function run() {
             res.send(result)
         });
 
+
+        // Hanldle Start Auction
+        app.put('/startAuction', async (req, res) => {
+            const { id } = req.body;
+            console.log(req.body);
+            const filter = { _id: ObjectId(id) };
+            const findPro = await watchesCollection.findOne(filter);
+            console.log(findPro);
+            
+            const updatedDoc = {
+                $set: {
+                    startAuction: true // Assuming you want to set the "startAuction" field to true
+                }
+            };
+            
+            const result = await watchesCollection.updateOne(filter, updatedDoc);
+            res.send(result);
+        });
+
     }
     finally {
 
